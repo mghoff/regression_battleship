@@ -7,7 +7,6 @@ library(data.table)
 library(ggplot2)
 library(magrittr)
 
-
 # Set working path
 fpath <- 'H:/R/reddit_regression_battleship'
 
@@ -51,10 +50,10 @@ pairs(as.formula(paste("y~ ", Xs)), data= clean.dat, col = 'steelblue')
 str(clean.dat)
 corrplot(cor(clean.dat[ ,-c(9,10)]), method = "color", addCoef.col = "white", number.digits = 2)
 
-
-
-### MODEL
-mod <- lm(y ~ I(x14,2), data = clean.dat)
+################################################################################
+### SUBMITTED MODEL
+################################################################################
+mod <- lm(y ~ poly(x14, 2) + x9 - 1, data = clean.dat)
 (summ.mod <- summary(mod)); r2 <- round(summ.mod$r.squared,3)
 predictions <- data.frame(x = 0:60, y = predict(mod, newdata = list(x14 = 0:60, x14_2 = (0:60)**2)))
 
@@ -68,3 +67,15 @@ ggplot(clean.dat, aes(x = x14, y =y, col = x9))+
     labs(title = 'Regression Battleship Plot')
 ggsave(file.path(fpath, 'reg_plot.png'))
 
+
+################################################################################
+### TRUE MODEL
+################################################################################
+trueMod <- lm(y ~ poly(x14, 2, raw = T) + x9:x13 + x11, data = clean.dat)
+summary(trueMod)
+
+varsToKeep <- c('y', 'x9', 'x11', 'x13', 'x14')
+true.dat <- clean.dat %>% .[, varsToKeep, with=F]
+
+Xs <- gsub(',', '\\+', toString(names(true.dat)))
+pairs(as.formula(paste("y~ ", Xs)), data= true.dat, col = 'steelblue')
